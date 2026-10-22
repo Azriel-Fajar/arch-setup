@@ -61,7 +61,7 @@ gpu_packages() {
     echo mesa lib32-mesa
     grep -q Intel <<<"$gpus" && echo vulkan-intel lib32-vulkan-intel intel-media-driver libva-intel-driver
     grep -qE 'AMD|ATI|Radeon' <<<"$gpus" && echo vulkan-radeon lib32-vulkan-radeon
-    grep -qi nvidia <<<"$gpus" && echo nvidia-open nvidia-utils lib32-nvidia-utils
+    grep -qi nvidia <<<"$gpus" && echo nvidia-open nvidia-utils lib32-nvidia-utils libva-nvidia-driver
     true
 }
 

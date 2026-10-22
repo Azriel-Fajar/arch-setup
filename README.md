@@ -50,7 +50,6 @@ Existing configs are moved to `~/.config-backup-<date>/` before linking.
 - Some configs assume user `azriel` with uid 1000 (`/home/azriel`, `/run/user/1000`
   in `hyprland.conf`, `plugins.conf`, `hyprlock.conf`, `macbar`/`macdock` `settings.json`).
   The script warns if yours differ.
-- `hyprland.conf` sets `LIBVA_DRIVER_NAME=iHD` (Intel). Remove it on AMD / NVIDIA.
 - The HyprGlass fork targets Hyprland 0.56.2. On a newer Hyprland, rebase branch
   `macshell` onto the matching pin in `hyprpm.toml` before `./install.sh plugins`.
 - `hyprlock.conf` uses a video background at `~/Videos/wallpaper_1080p.mp4`.
