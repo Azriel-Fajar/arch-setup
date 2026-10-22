@@ -1,0 +1,26 @@
+# ble.sh config. Palette indices map to kitty's matugen colors.
+# Accept suggestion: Right / End / Ctrl-F (whole), Alt-F (one word)
+
+# Dim inline suggestion instead of default grey-on-white box
+ble-face auto_complete='fg=8'
+
+bleopt complete_auto_delay=50
+bleopt complete_menu_style=align-nowrap
+bleopt history_share=yes
+# No "[ble: exit 1]" lines or bell; prompt shows status instead
+bleopt exec_errexit_mark=
+bleopt edit_abell=
+bleopt edit_vbell=
+
+# Syntax highlighting from palette
+ble-face command_builtin='fg=5'
+ble-face command_alias='fg=6'
+ble-face command_function='fg=6'
+ble-face command_file='fg=4'
+ble-face command_keyword='fg=5,bold'
+ble-face syntax_error='fg=1,bold'
+ble-face syntax_quoted='fg=2'
+ble-face syntax_quotation='fg=2'
+ble-face syntax_comment='fg=8,italic'
+ble-face filename_directory='fg=4,underline'
+ble-face varname_expr='fg=3'

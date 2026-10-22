@@ -173,6 +173,10 @@ mod_dev() {
     log "Linking shell and app configs"
     link home/.bashrc "$HOME/.bashrc"
     link home/.bash_profile "$HOME/.bash_profile"
+    link home/.zshrc "$HOME/.zshrc"
+    link home/.blerc "$HOME/.blerc"
+    link config/starship.toml "$HOME/.config/starship.toml"
+    link config/atuin "$HOME/.config/atuin"
     link config/Thunar "$HOME/.config/Thunar"
     link config/mimeapps.list "$HOME/.config/mimeapps.list"
 

@@ -3,6 +3,7 @@ aylurs-gtk-shell-git
 bibata-cursor-theme
 catppuccin-gtk-theme-mocha
 claude-desktop
+fzf-tab
 google-chrome
 hyprpanel-bin
 lib32-libvdpau

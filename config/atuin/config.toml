@@ -1,0 +1,17 @@
+# atuin: local history database (no sync unless you `atuin register`/`login`)
+auto_sync = false
+update_check = false
+
+search_mode = "fuzzy"
+filter_mode = "global"
+# Ctrl-R inside atuin cycles: global → host → session → directory
+style = "compact"
+inline_height = 20
+show_preview = true
+show_help = false
+# Enter runs the command; Tab puts it on the line for editing
+enter_accept = true
+
+# Don't record secrets typed inline
+secrets_filter = true
+history_filter = ["^export .*(TOKEN|KEY|SECRET|PASS)"]

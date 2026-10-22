@@ -42,13 +42,13 @@
   "clipboardCmd": "cliphist list | (fuzzel --dmenu || wofi --dmenu || rofi -dmenu) | cliphist decode | wl-copy",
   "appUsage": {
     "xampp-toggle": 10,
-    "google-chrome": 17,
+    "google-chrome": 18,
     "whatsapp-web": 9,
     "code": 8,
     "spotify": 3,
     "xfce4-settings-editor": 1,
     "xfce-settings-manager": 2,
-    "com.microsoft.VSCode": 8,
+    "com.microsoft.VSCode": 9,
     "com.anthropic.Claude": 5,
     "netbeans": 2,
     "chrome-mfojchihfdghnookghjdgbikdjhddfld-Default": 1

@@ -34,7 +34,7 @@ Run any of them on their own: `./install.sh rice dev`. All are safe to re-run.
 | `packages` | Enables multilib, installs `packages/pacman.txt`, CPU microcode and GPU drivers (auto-detected Intel / AMD / NVIDIA), `yay`, `packages/aur.txt` and flatpaks |
 | `rice`     | Links `hypr`, `macbar`, `macdock`, `matugen`, `rofi`, `kitty`, `wlogout`, `gtk-3.0`, `mako`, `environment.d`; clones the [MacShell fork](https://github.com/Azriel-Fajar/MacShell/tree/azriel); installs the Bibata hyprcursor and builds the [MacOS-Like](https://github.com/Scrimas/MacOS-Like) icon theme; makes a default wallpaper and generates colors |
 | `system`   | User groups, zram, SDDM `macos` theme, enables NetworkManager, bluetooth, power-profiles-daemon, avahi, timesyncd, fstrim, sddm |
-| `dev`      | Links `.bashrc`, `.bash_profile`, Thunar, `mimeapps.list`; npm globals into `~/.npm-global` (Claude Code etc.); sets git name/email |
+| `dev`      | Links `.bashrc`, `.bash_profile`, `.zshrc`, `.blerc`, starship, atuin, Thunar, `mimeapps.list`; npm globals into `~/.npm-global` (Claude Code etc.); sets git name/email |
 | `plugins`  | From inside Hyprland only: hyprpm plugins (hyprbars, hyprfocus, Hyprspace, dynamic-cursors) and builds the [HyprGlass fork](https://github.com/Azriel-Fajar/hyprglass/tree/macshell) |
 
 Existing configs are moved to `~/.config-backup-<date>/` before linking.

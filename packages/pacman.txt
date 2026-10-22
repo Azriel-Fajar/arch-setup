@@ -1,6 +1,8 @@
+atuin
 awww
 base
 base-devel
+bat
 blueman
 bluez
 bluez-utils
@@ -13,10 +15,13 @@ dart-sass
 discord
 dolphin
 dunst
+eza
 fastfetch
+fd
 ffmpegthumbnailer
 firefox
 flatpak
+fzf
 gcc
 git
 github-cli
@@ -55,8 +60,8 @@ nano
 nemo
 netbeans
 nethogs
-network-manager-applet
 networkmanager
+network-manager-applet
 ninja
 nmap
 nodejs
@@ -83,8 +88,8 @@ polkit-gnome
 polkit-kde-agent
 power-profiles-daemon
 python-pillow
-qt5-wayland
 qt5ct
+qt5-wayland
 qt6-wayland
 quickshell
 refind
@@ -98,6 +103,7 @@ smartmontools
 socat
 sof-firmware
 spectacle
+starship
 strace
 sudo
 swaybg
@@ -126,4 +132,10 @@ xdg-user-dirs
 xdg-utils
 xfce4-settings
 zip
+zoxide
 zram-generator
+zsh
+zsh-autosuggestions
+zsh-completions
+zsh-history-substring-search
+zsh-syntax-highlighting
