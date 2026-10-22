@@ -1,0 +1,47 @@
+@import url("../waybar/colors.css");
+
+* {
+    background-image: none;
+    box-shadow: none;
+    font-family: "Inter", "JetBrainsMono Nerd Font", sans-serif;
+    transition: all 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+window {
+    background-color: alpha(@surface, 0.72);
+}
+
+button {
+    margin: 10px;
+    border-radius: 24px;
+    border: 1px solid alpha(@outline, 0.25);
+    background-color: alpha(@surface_container_high, 0.85);
+    background-repeat: no-repeat;
+    background-position: center 38%;
+    background-size: 30%;
+    color: alpha(@on_surface, 0.75);
+    font-size: 15px;
+    font-weight: 600;
+    padding-top: 90px;
+}
+
+button:focus,
+button:hover {
+    background-color: alpha(@primary, 0.18);
+    border-color: alpha(@primary, 0.7);
+    color: @primary;
+    background-size: 34%;
+}
+
+#shutdown:focus,
+#shutdown:hover {
+    background-color: alpha(@error, 0.18);
+    border-color: alpha(@error, 0.7);
+    color: @error;
+}
+
+#lock     { background-image: image(url("/usr/share/wlogout/icons/lock.png")); }
+#logout   { background-image: image(url("/usr/share/wlogout/icons/logout.png")); }
+#suspend  { background-image: image(url("/usr/share/wlogout/icons/suspend.png")); }
+#reboot   { background-image: image(url("/usr/share/wlogout/icons/reboot.png")); }
+#shutdown { background-image: image(url("/usr/share/wlogout/icons/shutdown.png")); }

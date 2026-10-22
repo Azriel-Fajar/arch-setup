@@ -1,0 +1,65 @@
+@import "~/.config/rofi/colors.rasi"
+
+* {
+    background-color: transparent;
+    text-color: @on-surface;
+    font: "JetBrainsMono Nerd Font 12";
+}
+
+window {
+    location: center;
+    anchor: center;
+    width: 640px;
+    padding: 16px;
+    border: 1px;
+    border-color: @outline-glass;
+    border-radius: 16px;
+    background-color: @surface-glass;
+}
+
+mainbox {
+    spacing: 12px;
+    children: [ inputbar, listview ];
+}
+
+inputbar {
+    children: [ entry ];
+    spacing: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background-color: @surface-container-glass;
+}
+
+entry {
+    placeholder: "Search…";
+    placeholder-color: @on-surface-variant;
+    cursor: text;
+}
+
+listview {
+    lines: 8;
+    columns: 1;
+    spacing: 4px;
+    fixed-height: true;
+    scrollbar: false;
+}
+
+element {
+    padding: 8px 12px;
+    spacing: 12px;
+    border-radius: 10px;
+}
+
+element selected.normal {
+    background-color: @primary-container;
+    text-color: @on-primary-container;
+}
+
+element-icon {
+    size: 24px;
+}
+
+element-text {
+    text-color: inherit;
+    vertical-align: 0.5;
+}

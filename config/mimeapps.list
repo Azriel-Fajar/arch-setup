@@ -1,0 +1,18 @@
+[Default Applications]
+text/html=google-chrome.desktop
+x-scheme-handler/http=google-chrome.desktop
+x-scheme-handler/https=google-chrome.desktop
+x-scheme-handler/about=google-chrome.desktop
+x-scheme-handler/unknown=google-chrome.desktop
+text/x-csrc=code.desktop
+text/css=code.desktop
+application/x-zerosize=code.desktop
+application/zip=nemo.desktop
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop
+x-scheme-handler/claude=com.anthropic.Claude.desktop
+
+[Added Associations]
+text/x-csrc=code.desktop;
+text/css=code.desktop;
+application/x-zerosize=code.desktop;
+application/zip=org.kde.dolphin.desktop;nemo.desktop;

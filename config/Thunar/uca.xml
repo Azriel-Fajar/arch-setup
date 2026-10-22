@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+<action>
+	<icon>utilities-terminal</icon>
+	<name>Open Terminal Here</name>
+	<submenu></submenu>
+	<unique-id>1780410595504162-1</unique-id>
+	<command>exo-open --working-directory %f --launch TerminalEmulator</command>
+	<description>Example for a custom action</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+</action>
+<action>
+	<icon>package-x-generic</icon>
+	<name>Compress to ZIP</name>
+	<submenu></submenu>
+	<unique-id>1780410595504162-2</unique-id>
+	<command>sh -c 'cd "$1" || exit; shift; if [ $# -eq 1 ]; then b="${1%%/}"; else b=Archive; fi; n="$b.zip"; i=2; while [ -e "$n" ]; do n="$b-$i.zip"; i=$((i+1)); done; zip -rq "$n" "$@" || notify-send -u critical "Zip failed" "$n"' sh %d %N</command>
+	<description>Compress selected files/folders into a .zip</description>
+	<range></range>
+	<patterns>*</patterns>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>package-x-generic</icon>
+	<name>Extract Here</name>
+	<submenu></submenu>
+	<unique-id>1780410595504162-3</unique-id>
+	<command>sh -c 'for f; do p="${f%%/*}"; t=$(mktemp -d "$p/.unzip-XXXXXX") || continue; if ! unzip -q "$f" -d "$t"; then rm -rf "$t"; notify-send -u critical "Unzip failed" "$f"; continue; fi; if [ "$(ls -A "$t" | wc -l)" -eq 1 ]; then e=$(ls -A "$t"); s="$t/$e"; b="$p/$e"; else s="$t"; b="${f%%.*}"; fi; n="$b"; i=2; while [ -e "$n" ]; do n="$b-$i"; i=$((i+1)); done; mv "$s" "$n"; if [ -d "$t" ]; then rmdir "$t"; fi; done' sh %F</command>
+	<description>Extract .zip into a folder named after it</description>
+	<range></range>
+	<patterns>*.zip;*.ZIP</patterns>
+	<other-files/>
+</action>
+<action>
+	<icon>vscode</icon>
+	<name>Open in VS Code</name>
+	<submenu></submenu>
+	<unique-id>1780410595504162-4</unique-id>
+	<command>code %f</command>
+	<description>Open folder in Visual Studio Code</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+</action>
+</actions>

@@ -1,0 +1,25 @@
+@import "~/.config/rofi/glass.rasi"
+
+window {
+    width: 960px;
+}
+
+listview {
+    columns: 4;
+    lines: 2;
+    spacing: 10px;
+}
+
+element {
+    orientation: vertical;
+    padding: 8px;
+    spacing: 6px;
+}
+
+element-icon {
+    size: 180px;
+}
+
+element-text {
+    horizontal-align: 0.5;
+}
