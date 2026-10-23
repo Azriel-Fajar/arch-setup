@@ -8,6 +8,7 @@ text/x-csrc=code.desktop
 text/css=code.desktop
 application/x-zerosize=code.desktop
 application/zip=nemo.desktop
+inode/directory=thunar.desktop
 x-scheme-handler/claude-cli=claude-code-url-handler.desktop
 x-scheme-handler/claude=com.anthropic.Claude.desktop
 
