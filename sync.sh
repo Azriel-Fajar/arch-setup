@@ -16,9 +16,14 @@ rsync -a --delete \
 for d in macbar macdock matugen rofi kitty wlogout gtk-3.0 mako environment.d Thunar atuin; do
     rsync -a --delete --exclude '*.bak' "$HOME/.config/$d/" "config/$d/"
 done
-cp "$HOME/.config/mimeapps.list" "$HOME/.config/starship.toml" config/
+# Skip files install.sh already linked into the repo (cp refuses to copy a file onto itself).
+for f in mimeapps.list starship.toml; do
+    [ "$HOME/.config/$f" -ef "config/$f" ] || cp "$HOME/.config/$f" config/
+done
 mkdir -p home assets/icons
-cp "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.blerc" home/
+for f in .bashrc .bash_profile .zshrc .blerc; do
+    [ "$HOME/$f" -ef "home/$f" ] || cp "$HOME/$f" home/
+done
 rsync -a --delete "$HOME/.local/share/icons/Bibata-Modern-Classic-Hypr" assets/icons/
 
 echo "==> package lists"
