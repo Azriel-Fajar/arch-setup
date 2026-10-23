@@ -32,3 +32,12 @@ bak=/etc/sddm-theme.conf.bak
 [ -e "$bak" ] || cp "$conf" "$bak"
 printf '[Theme]\nCurrent=macos\n' > "$conf"
 echo "SDDM theme set to macos (previous config: $bak)"
+
+# /etc/sddm.conf and other conf.d files can override theme.conf; point them at macos too
+for f in /etc/sddm.conf /etc/sddm.conf.d/*.conf; do
+    [ "$f" != "$conf" ] && [ -f "$f" ] && grep -q '^Current=' "$f" || continue
+    b=/etc/sddm-$(basename "$f").bak
+    [ -e "$b" ] || cp "$f" "$b"
+    sed -i 's/^Current=.*/Current=macos/' "$f"
+    echo "Overriding theme in $f also set to macos (previous: $b)"
+done

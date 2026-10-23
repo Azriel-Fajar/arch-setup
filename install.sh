@@ -164,9 +164,11 @@ EOF
 
     log "Enabling services"
     local unit
-    for unit in NetworkManager bluetooth power-profiles-daemon avahi-daemon systemd-timesyncd fstrim.timer sddm; do
+    for unit in NetworkManager bluetooth power-profiles-daemon avahi-daemon systemd-timesyncd fstrim.timer; do
         sudo systemctl enable "$unit" || warn "could not enable $unit"
     done
+    # --force takes display-manager.service over from another DM (gdm, lightdm, ly)
+    sudo systemctl enable --force sddm || warn "could not enable sddm"
 }
 
 mod_dev() {
