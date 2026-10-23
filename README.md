@@ -43,7 +43,9 @@ Existing configs are moved to `~/.config-backup-<date>/` before linking.
 
 - Wallpapers: put your own in `~/Pictures/Wallpapers` (a plain gradient is generated on first install)
 - Monitor layout: a generic `monitor = , preferred, auto, 1` is written; set yours with `nwg-displays`
-- Logins and app data (gh, Claude, browsers, Discord): run `gh auth login` etc. yourself
+- Logins and app data (gh, Claude, browsers): run `gh auth login` etc. yourself
+- Personal apps: the package lists hold only the desktop and a few essentials
+  (Chrome, VS Code, kitty, Thunar, Claude Code). Install anything else yourself
 
 ## Caveats
 
@@ -57,7 +59,10 @@ Existing configs are moved to `~/.config-backup-<date>/` before linking.
 ## Updating the repo from this machine
 
 ```sh
-./sync.sh        # copies current configs + package lists in, scans for secrets
+./sync.sh        # copies current configs in, flags stale package entries, scans for secrets
 git diff         # review
 git commit -am "Sync" && git push
 ```
+
+`packages/*.txt` are curated by hand. When the desktop starts depending on a new
+package, add it there yourself; `sync.sh` does not copy every installed app.

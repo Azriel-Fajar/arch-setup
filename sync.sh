@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
-# Copy this machine's current configs and package lists into the repo, then scan
+# Copy this machine's current configs into the repo, check the package lists, then scan
 # for secrets. Run on the source machine before committing.
 set -euo pipefail
 
 REPO=$(dirname "$(realpath "$0")")
 cd "$REPO"
-
-# Installed per machine by install.sh (gpu_packages)
-HW_PKGS='^(intel-ucode|amd-ucode|intel-media-driver|libva-intel-driver|vulkan-intel|vulkan-radeon|nvidia.*|lib32-nvidia-utils)$'
 
 echo "==> configs"
 mkdir -p config
@@ -25,15 +22,11 @@ cp "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.blerc" home/
 rsync -a --delete "$HOME/.local/share/icons/Bibata-Modern-Classic-Hypr" assets/icons/
 
 echo "==> package lists"
-mkdir -p packages
-# Shell tools the zsh/kitty configs expect, listed even if not installed here yet
-SHELL_PKGS=(zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search
-            atuin starship fzf zoxide eza bat fd)
-{ pacman -Qqen | grep -vE "$HW_PKGS"; printf '%s\n' "${SHELL_PKGS[@]}"; } | sort -u > packages/pacman.txt
-{ pacman -Qqem; echo mactahoe-icon-theme-git; echo fzf-tab; } | sort -u > packages/aur.txt
-npm ls -g --depth=0 --parseable 2>/dev/null | tail -n +2 | sed 's|.*/node_modules/||' > packages/npm.txt
-flatpak list --app --columns=application 2>/dev/null > packages/flatpak.txt || true
-wc -l packages/*.txt
+# packages/*.txt are curated by hand (essentials only), so they are not regenerated.
+# Flag entries that are no longer installed here.
+stale=$(grep -hvE '^\s*(#|$)' packages/pacman.txt packages/aur.txt | while read -r p; do
+    pacman -Qq "$p" >/dev/null 2>&1 || echo "$p"; done)
+[ -z "$stale" ] || echo "!! listed but not installed here: $(echo $stale)"
 
 echo "==> secret scan"
 if grep -rInE '(ghp_|gho_|github_pat_|sk-ant-|sk-[A-Za-z0-9]{20}|AKIA[0-9A-Z]{16}|xox[bp]-|-----BEGIN [A-Z ]*PRIVATE KEY|(api[_-]?key|token|secret|password)\s*[=:]\s*\S{8,})' \
