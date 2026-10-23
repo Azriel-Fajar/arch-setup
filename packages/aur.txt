@@ -4,6 +4,5 @@ bibata-cursor-theme
 mactahoe-icon-theme-git
 wlogout
 fzf-tab
-pamac-aur
 google-chrome
 visual-studio-code-bin

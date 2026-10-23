@@ -101,7 +101,6 @@ thunar
 tumbler
 ffmpegthumbnailer
 webp-pixbuf-loader
-gvfs
 
 # Apps
 kitty
@@ -121,7 +120,6 @@ fzf
 zoxide
 eza
 bat
-fd
 fastfetch
 
 # Dev
