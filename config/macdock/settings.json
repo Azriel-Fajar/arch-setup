@@ -8,7 +8,7 @@
   "cornerRadius": 15,
   "darkMode": true,
   "glassOpacity": 0.16,
-  "dockStyle": "blur",
+  "dockStyle": "liquid",
   "wallpaperPath": "/home/azriel/Pictures/Wallpapers/purple-abstract.jpg",
   "glassDebug": false,
   "glassRim": 0.45,
