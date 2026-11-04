@@ -43,7 +43,7 @@ border-color=#ffb4ab
 background-color=#93000ae6
 text-color=#ffdad6
 format=<span weight="bold" foreground="#ffb4ab">⚠ %s</span>  %b
-default-timeout=0
+default-timeout=5000
 
 [app-name=XAMPP]
 border-color=#ebb9d0

@@ -43,7 +43,7 @@ border-color={{colors.error.default.hex}}
 background-color={{colors.error_container.default.hex}}e6
 text-color={{colors.on_error_container.default.hex}}
 format=<span weight="bold" foreground="{{colors.error.default.hex}}">⚠ %s</span>  %b
-default-timeout=0
+default-timeout=5000
 
 [app-name=XAMPP]
 border-color={{colors.tertiary.default.hex}}
