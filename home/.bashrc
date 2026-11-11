@@ -72,3 +72,4 @@ fi
 command -v starship >/dev/null && eval "$(starship init bash)"
 
 [[ ${BLE_VERSION-} ]] && ble-attach
+export PATH="$HOME/.config/composer/vendor/bin:$PATH"

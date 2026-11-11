@@ -1,8 +1,10 @@
 # Curated by hand, see pacman.txt
 yay
 bibata-cursor-theme
-mactahoe-icon-theme-git
 wlogout
 fzf-tab
 google-chrome
 visual-studio-code-bin
+claude-desktop
+spotify
+opencode-beta

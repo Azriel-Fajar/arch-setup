@@ -126,3 +126,4 @@ ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=2'
 ZSH_HIGHLIGHT_STYLES[path]='fg=4,underline'
 ZSH_HIGHLIGHT_STYLES[comment]='fg=8'
 unfunction _zplug
+export PATH="$HOME/.config/composer/vendor/bin:$PATH"
