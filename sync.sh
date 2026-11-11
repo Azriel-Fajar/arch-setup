@@ -9,7 +9,7 @@ cd "$REPO"
 echo "==> configs"
 mkdir -p config
 rsync -a --delete \
-    --exclude .git --exclude .superpowers --exclude 'backup-*/' --exclude '*.bak*' --exclude '*.pre-nwg' \
+    --exclude .git --exclude .superpowers --exclude 'backup-*/' --exclude '*.bak*' --exclude '*.pre-nwg' --exclude 'hyprland.lua.default*' \
     --exclude colors.conf --exclude monitors.conf --exclude monitors.lua --exclude workspaces.conf \
     --exclude sddm/macos/background.jpg \
     "$HOME/.config/hypr/" config/hypr/
