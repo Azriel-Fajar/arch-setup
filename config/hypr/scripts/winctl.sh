@@ -25,15 +25,14 @@ mkdir -p "$RUN" "${STATE%/*}"
 [ -s "$CACHE" ] || echo '{}' > "$CACHE"
 
 # Content box on monitor $1 as "x y w h": the monitor minus reserved space, outer gaps,
-# border and the hyprbars title bar. With $2 = max the menu bar's space is ignored too
-# (MacShell hides the bar while a maximized window is focused). The menu bar's reserved
-# height is remembered, so the normal area stays the same while the bar is hidden.
+# border and the hyprbars title bar. A maximized window fills exactly this box (callers
+# pass $2 = max for it; the menu bar stays visible, so it's the same box).
 workarea() {
     local gap bs bar
     gap=$(hyprctl getoption general:gaps_out -j | jq -r '.custom // (.int|tostring)' | awk '{print $1}')
     bs=$(hyprctl getoption general:border_size -j | jq '.int // 2')
     bar=$(hyprctl getoption plugin:hyprbars:bar_height -j 2>/dev/null | jq '.int // 28' 2>/dev/null || echo 28)
-    local out top
+    local out
     out=$(hyprctl monitors -j | jq -r --argjson id "$1" --argjson g "$gap" --argjson b "$bs" --argjson t "$bar" --arg mode "${2:-}" '
         .[] | select(.id == $id) | .scale as $s | .reserved as $r |
         (if .transform % 2 == 1 then [.height, .width] else [.width, .height] end | map(. / $s | floor)) as [$w, $h] |
@@ -41,9 +40,6 @@ workarea() {
     [ -z "$out" ] && return
     local rt x y w h rl rr rb g b t
     read -r rt x y w h rl rr rb g b t <<< "$out"
-    top="$RUN/rtop-$1"
-    if [ "$rt" -gt 0 ]; then echo "$rt" > "$top"; elif [ -s "$top" ]; then rt=$(< "$top"); fi
-    [ "${2:-}" = max ] && rt=0
     echo "$((x + rl + g + b)) $((y + rt + g + b + t)) $((w - rl - rr - 2 * g - 2 * b)) $((h - rt - rb - 2 * g - 2 * b - t))"
 }
 
@@ -53,7 +49,7 @@ glass() {  # addr on|off
     else hyprctl dispatch tagwindow -- -hyprglass_enabled "address:$1" > /dev/null; fi
 }
 
-# Hide MacShell's menu bar and tuck the Dock on the monitor whose focused window is maximized
+# Tuck MacShell's Dock on the monitor whose focused window is maximized (menu bar stays)
 bar_sync() {
     local j a x y w h mon fs fl name want="" mx my mw mh
     j=$(hyprctl activewindow -j)
@@ -72,8 +68,8 @@ bar_sync() {
     local on
     for name in $(hyprctl monitors -j | jq -r '.[].name'); do
         on=$([ "$name" = "$want" ] && echo true || echo false)
-        # menu bar hides; the Dock tucks away and still pops up at the bottom edge
-        { qs -c MacShell ipc call bar hide "$name" "$on"; qs -c MacShell ipc call dock hide "$name" "$on"; } > /dev/null 2>&1 &
+        # the Dock tucks away and still pops up at the bottom edge
+        qs -c MacShell ipc call dock hide "$name" "$on" > /dev/null 2>&1 &
     done
 }
 
