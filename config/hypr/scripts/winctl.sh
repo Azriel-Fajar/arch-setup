@@ -53,7 +53,7 @@ glass() {  # addr on|off
     else hyprctl dispatch tagwindow -- -hyprglass_enabled "address:$1" > /dev/null; fi
 }
 
-# Hide MacShell's menu bar on the monitor whose focused window is maximized
+# Hide MacShell's menu bar and tuck the Dock on the monitor whose focused window is maximized
 bar_sync() {
     local j a x y w h mon fs fl name want="" mx my mw mh
     j=$(hyprctl activewindow -j)
@@ -69,8 +69,11 @@ bar_sync() {
     fi
     [ "$want" = "$(cat "$RUN/bar" 2>/dev/null)" ] && return
     echo "$want" > "$RUN/bar"
+    local on
     for name in $(hyprctl monitors -j | jq -r '.[].name'); do
-        qs -c MacShell ipc call bar hide "$name" "$([ "$name" = "$want" ] && echo true || echo false)" > /dev/null 2>&1 &
+        on=$([ "$name" = "$want" ] && echo true || echo false)
+        # menu bar hides; the Dock tucks away and still pops up at the bottom edge
+        { qs -c MacShell ipc call bar hide "$name" "$on"; qs -c MacShell ipc call dock hide "$name" "$on"; } > /dev/null 2>&1 &
     done
 }
 
