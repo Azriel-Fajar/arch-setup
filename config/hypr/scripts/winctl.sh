@@ -249,8 +249,33 @@ daemon() {
     trap 'kill $poller 2>/dev/null' EXIT
     trap 'exit 0' TERM INT
 
+    # Spotlight/rofi hold exclusive keyboard focus, so a workspace switch while they're open
+    # keeps the old window focused, and closing them refocuses it: Hyprland jumps back to
+    # its workspace. Detect that jump and switch back.
+    local spot=0 moved=0 cur=0 jump=0 w
     socat -U - UNIX-CONNECT:"$sock" | while IFS= read -r line; do
         case $line in
+            openlayer\>\>macspot | openlayer\>\>rofi)
+                spot=1 moved=0 jump=0 cur=$(hyprctl activeworkspace -j | jq .id) ;;
+            closelayer\>\>macspot | closelayer\>\>rofi) spot=0 ;;
+            workspacev2\>\>*)
+                w=${line#*>>}; w=${w%%,*}
+                if [ "$spot" = 1 ]; then
+                    if [ "$jump" != 0 ] && [ "$w" != "$jump" ]; then
+                        focus "" "$jump" &
+                        jump=0
+                    else
+                        [ "$w" != "$cur" ] && moved=1
+                        cur=$w
+                    fi
+                fi ;;
+            activewindowv2\>\>?*)
+                if [ "$spot" = 1 ] && [ "$moved" = 1 ]; then
+                    a=${line#*>>}
+                    w=$(hyprctl clients -j | jq --arg a "0x$a" '.[] | select(.address == $a) | .workspace.id')
+                    [ -n "$w" ] && [ "$w" != "$cur" ] && jump=$cur
+                fi
+                bar_sync ;;
             openwindow\>\>*)  a=${line#*>>}; on_open "0x${a%%,*}"; snapshot; bar_sync ;;
             closewindow\>\>*) a=${line#*>>}; on_close "0x$a"; bar_sync ;;
             activewindowv2\>\>*) bar_sync ;;
@@ -270,7 +295,8 @@ focus() {
         "\(if .enabled then 1 else 0 end),\(.speed),\(.bezier),\(.style)"')
     [ -n "$anim" ] && cmd="keyword animation workspaces,0 ; "
     [ "${ws:-0}" -gt 0 ] && cmd+="dispatch workspace $ws ; "
-    hyprctl --batch "${cmd}dispatch focuswindow address:$a" > /dev/null
+    [ -n "$a" ] && cmd+="dispatch focuswindow address:$a"
+    hyprctl --batch "$cmd" > /dev/null
     [ -n "$anim" ] && { sleep 0.3; hyprctl keyword animation "workspaces,${anim%,}" > /dev/null; }
 }
 
