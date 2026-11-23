@@ -129,8 +129,6 @@ github-cli
 composer
 firefox
 discord
-vim
-htop
 nmap
 wireshark-qt
 php-gd
@@ -138,4 +136,4 @@ jdk-openjdk
 netbeans
 zip
 ntfs-3g
-nvtop
+libinput-tools

@@ -7,7 +7,7 @@
 #   winctl.sh max             maximize <-> restore active window
 #   winctl.sh up              maximize active window
 #   winctl.sh down            restore if maximized/snapped, else minimize
-#   winctl.sh snap l|r        snap active window to the left/right half
+#   winctl.sh snap l|r|tl|tr|bl|br   snap active window to a half or quarter
 #   winctl.sh desk up|down|toggle   overview / show desktop (4-finger swipes, Super+Tab)
 #   winctl.sh focus ADDR WS   focus a window, workspace switch without animation (Alt+Tab)
 RUN="$XDG_RUNTIME_DIR/hypr-winctl"
@@ -64,7 +64,9 @@ bar_sync() {
         read -r x y w h mon fs fl < <(jq -r '"\(.at[0]) \(.at[1]) \(.size[0]) \(.size[1]) \(.monitor) \(.fullscreen) \(.floating)"' <<< "$j")
         if [ "$fl" = true ] && [ "$fs" = 0 ]; then
             read -r mx my mw mh < <(workarea "$mon" max)
-            if [ -n "$mx" ] && is_max "$x" "$y" "$w" "$h" "$mx" "$my" "$mw" "$mh"; then
+            # maximized, or snapped to a half (full height, flush with the left or right edge): both reach the Dock's strip
+            if [ -n "$mx" ] && { is_max "$x" "$y" "$w" "$h" "$mx" "$my" "$mw" "$mh" ||
+                { near "$y" "$my" && near "$((y + h))" "$((my + mh))" && { near "$x" "$mx" || near "$((x + w))" "$((mx + mw))"; }; }; }; then
                 want=$(hyprctl monitors -j | jq -r --argjson id "$mon" '.[] | select(.id == $id) | .name')
             fi
         fi
@@ -130,16 +132,105 @@ restore() {
     setgeom "$A" $g
 }
 
-snap() {
-    local bs gap half
+# Window geometry "x y w h" for snap zone $1 (l r tl tr bl br max) on monitor $2
+snap_geom() {
+    local wx wy ww wh bs gap bar half hh
+    [ "$1" = max ] && { workarea "$2" max; return; }
+    read -r wx wy ww wh < <(workarea "$2")
     bs=$(hyprctl getoption general:border_size -j | jq '.int // 2')
     gap=$(gaps_out)
-    active_is_max || [ -n "$(restore_get "$A")" ] || restore_set "$A" "$X" "$Y" "$W" "$H"
-    half=$(((WW - 2 * bs - gap) / 2))
+    bar=$(hyprctl getoption plugin:hyprbars:bar_height -j 2>/dev/null | jq '.int // 28' 2>/dev/null || echo 28)
+    half=$(((ww - 2 * bs - gap) / 2))
+    hh=$(((wh - 2 * bs - gap - bar) / 2))  # quarter height: the lower window has its own title bar
     case $1 in
-        l) setgeom "$A" "$WX" "$WY" "$half" "$WH" ;;
-        r) setgeom "$A" "$((WX + WW - half))" "$WY" "$half" "$WH" ;;
+        l)  echo "$wx $wy $half $wh" ;;
+        r)  echo "$((wx + ww - half)) $wy $half $wh" ;;
+        tl) echo "$wx $wy $half $hh" ;;
+        tr) echo "$((wx + ww - half)) $wy $half $hh" ;;
+        bl) echo "$wx $((wy + wh - hh)) $half $hh" ;;
+        br) echo "$((wx + ww - half)) $((wy + wh - hh)) $half $hh" ;;
     esac
+}
+
+snap() {
+    active_is_max || [ -n "$(restore_get "$A")" ] || restore_set "$A" "$X" "$Y" "$W" "$H"
+    setgeom "$A" $(snap_geom "$1" "$MON")
+}
+
+# ---- drag snap (Windows Aero Snap) ------------------------------------------
+# Hyprland has no drag-end event and eats the button during a drag, so the daemon reads the
+# left button from libinput (needs libinput-tools and the user in the `input` group).
+# A window dropped with the cursor at a screen edge snaps: side = half, corner = quarter,
+# top = maximize, bottom corners = quarter. While dragging, MacShell previews the spot.
+cursor() { hyprctl cursorpos -j | jq -r '"\(.x | floor) \(.y | floor)"'; }
+mon_boxes() {  # "id x y w h" per monitor, logical size
+    hyprctl monitors -j | jq -r '.[] | .scale as $s |
+        (if .transform % 2 == 1 then [.height, .width] else [.width, .height] end | map(. / $s | floor)) as [$w, $h] |
+        "\(.id) \(.x) \(.y) \($w) \($h)"'
+}
+
+# Snap zone under cursor $1 $2 as "zone monitor-id" (nothing away from the edges); $3 = mon_boxes
+zone_at() {
+    local cx=$1 cy=$2 id mx my mw mh e=12 z=""
+    while read -r id mx my mw mh; do
+        [ "$cx" -ge "$mx" ] && [ "$cx" -lt $((mx + mw)) ] && [ "$cy" -ge "$my" ] && [ "$cy" -lt $((my + mh)) ] || continue
+        local up=0 lo=0 lq=0 rq=0
+        [ "$cy" -lt $((my + mh / 4)) ] && up=1
+        [ "$cy" -ge $((my + mh - mh / 4)) ] && lo=1
+        [ "$cx" -lt $((mx + mw / 4)) ] && lq=1
+        [ "$cx" -ge $((mx + mw - mw / 4)) ] && rq=1
+        if   [ $((cx - mx)) -le $e ]; then           z=l; [ $up = 1 ] && z=tl; [ $lo = 1 ] && z=bl
+        elif [ $((mx + mw - 1 - cx)) -le $e ]; then  z=r; [ $up = 1 ] && z=tr; [ $lo = 1 ] && z=br
+        elif [ $((cy - my)) -le $e ]; then           z=max; [ $lq = 1 ] && z=tl; [ $rq = 1 ] && z=tr
+        elif [ $((my + mh - 1 - cy)) -le $e ]; then  [ $lq = 1 ] && z=bl; [ $rq = 1 ] && z=br
+        fi
+        [ -n "$z" ] && echo "$z $id"
+        return
+    done <<< "$3"
+}
+
+press() {
+    hyprctl activewindow -j | jq -r '"\(.address) \(.at[0]) \(.at[1]) \(.size[0]) \(.size[1])"' > "$RUN/press"
+}
+
+# Runs while the button is held: show the frame the dragged window would snap to
+preview_loop() {
+    local pa px py mons bs bar cx cy z last="" ax ay x y w h
+    read -r pa px py _ _ < "$RUN/press" 2>/dev/null || return
+    mons=$(mon_boxes)
+    bs=$(hyprctl getoption general:border_size -j | jq '.int // 2')
+    bar=$(hyprctl getoption plugin:hyprbars:bar_height -j 2>/dev/null | jq '.int // 28' 2>/dev/null || echo 28)
+    while sleep 0.05; do
+        read -r cx cy < <(cursor)
+        z=$(zone_at "$cx" "$cy" "$mons")
+        if [ -n "$z" ] && [ "$z" != "$last" ]; then
+            # only for a window that's really being dragged
+            read -r ax ay < <(hyprctl activewindow -j | jq -r --arg a "$pa" 'select(.address == $a) | "\(.at[0]) \(.at[1])"')
+            { [ -z "$ax" ] || { near "$ax" "$px" 10 && near "$ay" "$py" 10; }; } && continue
+            read -r x y w h < <(snap_geom $z)
+            touch "$RUN/preview"
+            qs -c MacShell ipc call snap place $((x - bs)) $((y - bs - bar)) $((w + 2 * bs)) $((h + 2 * bs + bar)) > /dev/null 2>&1
+        elif [ -z "$z" ] && [ -n "$last" ]; then
+            qs -c MacShell ipc call snap hide > /dev/null 2>&1
+        fi
+        last=$z
+    done
+}
+
+dragend() {
+    local pa px py pw ph a x y w h cx cy zone
+    read -r pa px py pw ph < "$RUN/press" 2>/dev/null || return 0
+    rm -f "$RUN/press"
+    read -r a x y w h < <(hyprctl activewindow -j | jq -r '"\(.address) \(.at[0]) \(.at[1]) \(.size[0]) \(.size[1])"')
+    # same window, same size (a resize isn't a move), and it actually moved
+    [ -n "$a" ] && [ "$a" = "$pa" ] && [ "$w" = "$pw" ] && [ "$h" = "$ph" ] || return 0
+    near "$x" "$px" 10 && near "$y" "$py" 10 && return 0
+    read -r cx cy < <(cursor)
+    read -r zone _ < <(zone_at "$cx" "$cy" "$(mon_boxes)")
+    [ -z "$zone" ] && return 0
+    load_active
+    if [ "$zone" = max ]; then maximize; else snap "$zone"; fi
+    bar_sync
 }
 
 # ---- daemon -----------------------------------------------------------------
@@ -167,7 +258,13 @@ on_open() {
 
     # saved coordinates are relative to the maximized box (doesn't move when the bar hides)
     saved=$(jq -c --arg c "$c" '.[$c] // empty' "$STATE")
-    if [ -n "$saved" ]; then
+    # another window of this app is already open: the remembered spot is taken, open centered (remembered size)
+    if [ -n "$saved" ] && hyprctl clients -j | jq -e --arg a "$a" --arg c "$c" 'any(.[]; .address != $a and .initialClass == $c)' > /dev/null; then
+        read -r w h < <(jq -r '(if .max then (.r // .g) else .g end) | "\(.[2]) \(.[3])"' <<< "$saved")
+        [ "$w" -gt "$ww" ] && w=$ww
+        [ "$h" -gt "$wh" ] && h=$wh
+        x=$((wx + (ww - w) / 2)) y=$((wy + (wh - h) / 2))
+    elif [ -n "$saved" ]; then
         read -r x y w h < <(jq -r '.g | "\(.[0]) \(.[1]) \(.[2]) \(.[3])"' <<< "$saved")
         x=$((x + mx)) y=$((y + my))
         if [ "$(jq -r '.max' <<< "$saved")" = true ]; then
@@ -252,7 +349,21 @@ daemon() {
     # the poller also catches a maximized window dragged away (no event for that)
     (exec 9>&-; while sleep 1; do snapshot; bar_sync; done) &
     local poller=$!
-    trap 'kill $poller 2>/dev/null' EXIT
+    # left button press/release straight from the input devices, for drag snap
+    (exec 9>&-; stdbuf -oL libinput debug-events --enable-tap --enable-drag 2>/dev/null |
+        while read -r _ ev _ btn _ state _ _ n; do
+            [ "$ev" = POINTER_BUTTON ] && [ "$btn" = BTN_LEFT ] || continue
+            # seat count: touchpad and its button device both report; act on first press / last release
+            case $state$n in
+                pressed,1) press; preview_loop & prev=$! ;;
+                released,0)
+                    [ -n "$prev" ] && { kill "$prev"; wait "$prev"; } 2>/dev/null; prev=""
+                    [ -f "$RUN/preview" ] && { rm -f "$RUN/preview"; qs -c MacShell ipc call snap hide > /dev/null 2>&1 & }
+                    dragend ;;
+            esac
+        done) &
+    local mouse=$!
+    trap 'kill $poller $mouse 2>/dev/null' EXIT
     trap 'exit 0' TERM INT
 
     # Spotlight/rofi hold exclusive keyboard focus, so a workspace switch while they're open

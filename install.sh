@@ -147,7 +147,7 @@ EOF
 mod_system() {
     log "User groups"
     local g
-    for g in video audio wheel wireshark; do
+    for g in video audio wheel wireshark input; do
         getent group "$g" >/dev/null && sudo usermod -aG "$g" "$USER"
     done
 

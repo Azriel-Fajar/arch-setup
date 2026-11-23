@@ -85,6 +85,7 @@ hl.on("hyprland.start", function()
     -- MacShell: menu bar, Dock, Spotlight, notifications (replaces waybar + dunst). Loop restarts it if it crashes.
     hl.exec_cmd("sh -c 'while :; do qs -c MacShell; sleep 1; done'")
     hl.exec_cmd("blueman-applet")
+    hl.exec_cmd("udiskie --automount --notify --no-tray")
     hl.exec_cmd("bluetoothctl power off")
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
     hl.exec_cmd("wl-paste --type image --watch cliphist store")
@@ -222,6 +223,8 @@ hl.window_rule({ name = "macshell-settings", match = { title = "^(macshell Setti
 
 -- No close animation for the slurp/hyprpicker overlays, or grim captures them mid-slide
 hl.layer_rule({ name = "no-anim-pickers", match = { namespace = "^(selection|hyprpicker)$" }, no_anim = true })
+-- winctl's drag-snap preview (MacShell) fades itself
+hl.layer_rule({ name = "no-anim-snap-preview", match = { namespace = "^(snap-preview)$" }, no_anim = true })
 
 
 require("look")
