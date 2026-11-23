@@ -153,7 +153,8 @@ if hl.plugin.hyprglass then
     -- the menu bar sits under small text and icons: more frost there keeps them readable
     hg.preset("macshellbar", { inherits = "macshell", blur_strength = 0.6 })
     -- menus, Control Center, Spotlight: Apple's frostier "regular" glass so their text stays readable
-    hg.preset("macshellpanel", { inherits = "macshell", blur_strength = 1.2, blur_iterations = 2 })
+    -- edge_thickness_px: a fixed rim, so the small workspace pill gets the same edge as a big menu
+    hg.preset("macshellpanel", { inherits = "macshell", blur_strength = 1.2, blur_iterations = 2, edge_thickness_px = 5 })
 
     -- MacShell layers: menu bar (macbarbg), Dock, popovers/menus/Control Center (macbar), Spotlight (macspot),
     -- Alt+Tab switcher (macswitch), wallpaper picker (macwall)
@@ -194,9 +195,9 @@ if hl.plugin.hyprglass then
         hg.layer("rofi")
         hg.layer("macbarbg",  { preset = "macshellbar",   mask_mode = "region" })
         hg.layer("macdock",   { preset = "macshell",      mask_mode = "region" })
-        -- macbar asks for blur over the whole popover area, so region would frost it all: glass only on
-        -- the menus and panels it draws (contour), like the fork's shape maps
-        hg.layer("macbar",    { preset = "macshellpanel", mask_mode = "contour", mask_threshold = 0.08 })
+        -- macbar (MacShell) requests glass exactly for the active workspace pill and each open popover / Control
+        -- Center tile. Contour or alpha would also give the bar's text glass (white specks around the letters).
+        hg.layer("macbar",    { preset = "macshellpanel", mask_mode = "region" })
         hg.layer("macspot",   { preset = "macshellpanel", mask_mode = "contour", mask_threshold = 0.08 })
         hg.layer("macswitch", { preset = "macshellpanel", mask_mode = "contour", mask_threshold = 0.08 })
         hg.layer("macwall",   { preset = "macshellpanel", mask_mode = "contour", mask_threshold = 0.08 })
