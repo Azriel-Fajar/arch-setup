@@ -12,9 +12,14 @@ magenta = "#c678dd"
 cyan = "#56b6c2"
 # No [config.wallpaper]: wallpaper.sh sets the wallpaper itself with awww
 
+# colors.lua: Hyprland 0.55+ Lua config; colors.conf: hyprlock (still hyprlang)
 [templates.hypr]
 input_path = "./templates/hypr-colors.conf"
 output_path = "~/.config/hypr/colors.conf"
+
+[templates.hypr_lua]
+input_path = "./templates/hypr-colors.lua"
+output_path = "~/.config/hypr/colors.lua"
 
 [templates.waybar]
 input_path = "./templates/waybar-colors.css"

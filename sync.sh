@@ -10,7 +10,7 @@ echo "==> configs"
 mkdir -p config
 rsync -a --delete \
     --exclude .git --exclude .superpowers --exclude 'backup-*/' --exclude '*.bak*' --exclude '*.pre-nwg' --exclude 'hyprland.lua.default*' \
-    --exclude colors.conf --exclude monitors.conf --exclude monitors.lua --exclude workspaces.conf \
+    --exclude colors.conf --exclude colors.lua --exclude monitors.conf --exclude monitors.lua --exclude workspaces.conf --exclude workspaces.lua \
     --exclude sddm/macos/background.jpg \
     "$HOME/.config/hypr/" config/hypr/
 for d in macbar macdock matugen rofi kitty wlogout gtk-3.0 mako environment.d Thunar atuin; do

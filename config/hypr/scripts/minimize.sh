@@ -5,7 +5,7 @@
 ws="special:minimized"
 
 if [ "$1" != "restore" ]; then
-    hyprctl dispatch movetoworkspacesilent "$ws" > /dev/null
+    hyprctl dispatch "hl.dsp.window.move({ workspace = '$ws', follow = false })" > /dev/null
     exit
 fi
 
@@ -29,4 +29,5 @@ done | rofi -dmenu -i -show-icons -p "Restore" -format i)
 
 addr=$(jq -r ".[$idx].address" <<< "$clients")
 cur=$(hyprctl activeworkspace -j | jq .id)
-hyprctl --batch "dispatch movetoworkspace $cur,address:$addr; dispatch focuswindow address:$addr" > /dev/null
+hyprctl eval "hl.dispatch(hl.dsp.window.move({ workspace = '$cur', window = 'address:$addr' }));
+    hl.dispatch(hl.dsp.focus({ window = 'address:$addr' }))" > /dev/null

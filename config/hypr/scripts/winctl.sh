@@ -20,6 +20,11 @@ MIN_W=500 MIN_H=350
 STEP=32   # cascade offset
 
 mkdir -p "$RUN" "${STATE%/*}"
+
+# Hyprland 0.55+ is driven in Lua: `hyprctl dispatch` takes hl.dsp.* expressions, the old strings fail
+dsp() { hyprctl dispatch "$1" > /dev/null; }
+lua() { hyprctl eval "$1" > /dev/null; }
+gaps_out() { hyprctl getoption general:gaps_out -j | jq -r '.css // .custom // (.int|tostring)' | awk '{print $1}'; }
 [ -s "$STATE" ] || echo '{}' > "$STATE"
 [ -s "$RESTORE" ] || echo '{}' > "$RESTORE"
 [ -s "$CACHE" ] || echo '{}' > "$CACHE"
@@ -29,7 +34,7 @@ mkdir -p "$RUN" "${STATE%/*}"
 # pass $2 = max for it; the menu bar stays visible, so it's the same box).
 workarea() {
     local gap bs bar
-    gap=$(hyprctl getoption general:gaps_out -j | jq -r '.custom // (.int|tostring)' | awk '{print $1}')
+    gap=$(gaps_out)
     bs=$(hyprctl getoption general:border_size -j | jq '.int // 2')
     bar=$(hyprctl getoption plugin:hyprbars:bar_height -j 2>/dev/null | jq '.int // 28' 2>/dev/null || echo 28)
     local out
@@ -45,8 +50,9 @@ workarea() {
 
 # Liquid glass only on floating windows that aren't maximized or fullscreen
 glass() {  # addr on|off
-    if [ "$2" = on ]; then hyprctl dispatch tagwindow +hyprglass_enabled "address:$1" > /dev/null
-    else hyprctl dispatch tagwindow -- -hyprglass_enabled "address:$1" > /dev/null; fi
+    local sign=-
+    [ "$2" = on ] && sign=+
+    dsp "hl.dsp.window.tag({ tag = '${sign}hyprglass_enabled', window = 'address:$1' })"
 }
 
 # Tuck MacShell's Dock on the monitor whose focused window is maximized (menu bar stays)
@@ -76,7 +82,8 @@ bar_sync() {
 client() { hyprctl clients -j | jq -c --arg a "$1" '.[] | select(.address == $a)'; }
 
 setgeom() {  # addr x y w h [max]
-    hyprctl --batch "dispatch resizewindowpixel exact $4 $5,address:$1; dispatch movewindowpixel exact $2 $3,address:$1" > /dev/null
+    lua "hl.dispatch(hl.dsp.window.resize({ x = $4, y = $5, window = 'address:$1' }));
+         hl.dispatch(hl.dsp.window.move({ x = $2, y = $3, window = 'address:$1' }))"
     glass "$1" "$([ "${6:-}" = max ] && echo off || echo on)"
     snapshot  # a close right after this must see the new geometry
 }
@@ -99,8 +106,8 @@ load_active() {
     j=$(hyprctl activewindow -j)
     [ "$(jq -r '.address // empty' <<< "$j")" ] || exit 0
     read -r A X Y W H MON FS FLOAT < <(jq -r '"\(.address) \(.at[0]) \(.at[1]) \(.size[0]) \(.size[1]) \(.monitor) \(.fullscreen) \(.floating)"' <<< "$j")
-    if [ "$FS" != 0 ]; then hyprctl dispatch fullscreenstate 0 0 > /dev/null; fi
-    if [ "$FLOAT" != true ]; then hyprctl dispatch setfloating "address:$A" > /dev/null; fi
+    if [ "$FS" != 0 ]; then dsp "hl.dsp.window.fullscreen_state({ internal = 0, client = 0, action = 'set' })"; fi
+    if [ "$FLOAT" != true ]; then dsp "hl.dsp.window.float({ action = 'set', window = 'address:$A' })"; fi
     read -r WX WY WW WH < <(workarea "$MON")
     read -r MX MY MW MH < <(workarea "$MON" max)
 }
@@ -126,7 +133,7 @@ restore() {
 snap() {
     local bs gap half
     bs=$(hyprctl getoption general:border_size -j | jq '.int // 2')
-    gap=$(hyprctl getoption general:gaps_out -j | jq -r '.custom // (.int|tostring)' | awk '{print $1}')
+    gap=$(gaps_out)
     active_is_max || [ -n "$(restore_get "$A")" ] || restore_set "$A" "$X" "$Y" "$W" "$H"
     half=$(((WW - 2 * bs - gap) / 2))
     case $1 in
@@ -229,7 +236,7 @@ daemon() {
     # windows that were tiled before this ran: make them maximized floats
     hyprctl clients -j | jq -r '.[] | select(.floating == false and .fullscreen == 0 and (.workspace.name | startswith("special") | not)) | "\(.address) \(.monitor) \(.at[0]) \(.at[1]) \(.size[0]) \(.size[1])"' |
     while read -r a mon _ _ _ _; do
-        hyprctl dispatch setfloating "address:$a" > /dev/null
+        dsp "hl.dsp.window.float({ action = 'set', window = 'address:$a' })"
         read -r wx wy ww wh < <(workarea "$mon" max)
         setgeom "$a" "$wx" "$wy" "$ww" "$wh" max
     done
@@ -290,13 +297,14 @@ daemon() {
 # Switch to window $1 on workspace $2 without the workspace slide (MacShell's switcher calls this)
 focus() {
     local a=$1 ws=$2 anim cmd=""
+    # the configured workspaces animation, as an hl.animation() table to put back afterwards
     anim=$(hyprctl animations -j | jq -r '.[0][] | select(.name == "workspaces" and .overridden) |
-        "\(if .enabled then 1 else 0 end),\(.speed),\(.bezier),\(.style)"')
-    [ -n "$anim" ] && cmd="keyword animation workspaces,0 ; "
-    [ "${ws:-0}" -gt 0 ] && cmd+="dispatch workspace $ws ; "
-    [ -n "$a" ] && cmd+="dispatch focuswindow address:$a"
-    hyprctl --batch "$cmd" > /dev/null
-    [ -n "$anim" ] && { sleep 0.3; hyprctl keyword animation "workspaces,${anim%,}" > /dev/null; }
+        "{ leaf = \"workspaces\", enabled = \(.enabled), speed = \(.speed), bezier = \"\(.bezier)\", style = \"\(.style)\" }"')
+    [ -n "$anim" ] && cmd="hl.animation({ leaf = 'workspaces', enabled = false }); "
+    [ "${ws:-0}" -gt 0 ] && cmd+="hl.dispatch(hl.dsp.focus({ workspace = '$ws' })); "
+    [ -n "$a" ] && cmd+="hl.dispatch(hl.dsp.focus({ window = 'address:$a' }))"
+    lua "$cmd"
+    [ -n "$anim" ] && { sleep 0.3; lua "hl.animation($anim)"; }
 }
 
 # ---- show desktop / overview -----------------------------------------------
@@ -307,27 +315,27 @@ desk() {
     flag="$RUN/desk-$ws"
     case $1 in
         toggle)
-            if [ -f "$RUN/overview" ]; then rm -f "$RUN/overview"; hyprctl dispatch overview:close > /dev/null
-            else touch "$RUN/overview"; hyprctl dispatch overview:open > /dev/null; fi ;;
+            if [ -f "$RUN/overview" ]; then rm -f "$RUN/overview"; lua "hl.plugin.overview.close()"
+            else touch "$RUN/overview"; lua "hl.plugin.overview.open()"; fi ;;
         up)
             if [ -f "$flag" ]; then  # desktop shown: bring the windows back
                 rm -f "$flag"
                 for a in $(hyprctl clients -j | jq -r --arg w "special:desk$ws" '.[] | select(.workspace.name == $w) | .address'); do
-                    hyprctl dispatch movetoworkspacesilent "$ws,address:$a" > /dev/null
+                    dsp "hl.dsp.window.move({ workspace = '$ws', follow = false, window = 'address:$a' })"
                 done
             else
-                touch "$RUN/overview"; hyprctl dispatch overview:open > /dev/null
+                touch "$RUN/overview"; lua "hl.plugin.overview.open()"
             fi ;;
         down)
             if [ -f "$RUN/overview" ]; then
-                rm -f "$RUN/overview"; hyprctl dispatch overview:close > /dev/null
+                rm -f "$RUN/overview"; lua "hl.plugin.overview.close()"
             elif [ ! -f "$flag" ]; then  # show desktop: park this workspace's windows
                 local addrs
                 addrs=$(hyprctl clients -j | jq -r --argjson w "$ws" '.[] | select(.workspace.id == $w) | .address')
                 [ -z "$addrs" ] && return
                 touch "$flag"
                 for a in $addrs; do
-                    hyprctl dispatch movetoworkspacesilent "special:desk$ws,address:$a" > /dev/null
+                    dsp "hl.dsp.window.move({ workspace = 'special:desk$ws', follow = false, window = 'address:$a' })"
                 done
             fi ;;
     esac

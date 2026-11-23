@@ -13,6 +13,7 @@ MACSHELL_URL=https://github.com/Azriel-Fajar/MacShell.git
 MACSHELL_BRANCH=azriel
 HYPRGLASS_URL=https://github.com/Azriel-Fajar/hyprglass.git
 HYPRGLASS_BRANCH=macshell
+HYPRGLASS_UPSTREAM=https://github.com/hyprnux/hyprglass.git
 
 log()  { printf '\n\033[1;32m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[!]\033[0m %s\n' "$*" >&2; }
@@ -103,7 +104,8 @@ mod_rice() {
         link "config/$d" "$HOME/.config/$d"
     done
 
-    # Per-device and generated files: the repo gitignores these
+    # Per-device files (nwg-displays writes them; the repo gitignores them). hyprland.lua already has a
+    # catch-all monitor rule; monitors.conf is only for a Hyprland older than 0.55 (hyprland.conf).
     [ -e "$REPO/config/hypr/monitors.conf" ] || echo 'monitor = , preferred, auto, 1' > "$REPO/config/hypr/monitors.conf"
 
     log "Installing MacShell"
@@ -210,19 +212,42 @@ EOF
         hyprpm enable "$p" || warn "could not enable $p"
     done
 
+    # HyprGlass: the fork (MacShell shape maps + rim refraction) when its hyprpm.toml pins this Hyprland,
+    # else upstream at its pin. plugins.lua loads the fork's .so first, then upstream's.
+    local hl_commit headers=/var/cache/hyprpm/$USER/headersRoot/share/pkgconfig
+    hl_commit=$(hyprctl version -j | jq -r .commit)
+
     log "Building HyprGlass fork"
     local src=$HOME/.local/src/HyprGlass dest=$HOME/.local/share/hyprglass-macshell
     clone_or_pull "$HYPRGLASS_URL" "$HYPRGLASS_BRANCH" "$src"
-    PKG_CONFIG_PATH=/var/cache/hyprpm/$USER/headersRoot/share/pkgconfig make -C "$src" \
-        || die "HyprGlass build failed: the fork targets Hyprland 0.56.2, rebase branch $HYPRGLASS_BRANCH onto the pin for your version (hyprpm.toml)"
-    mkdir -p "$dest"
-    # never overwrite a loaded .so in place
-    install -m 755 "$src/hyprglass.so" "$dest/hyprglass.so.new"
-    mv "$dest/hyprglass.so.new" "$dest/hyprglass.so"
+    if grep -q "\"$hl_commit\"" "$src/hyprpm.toml" && PKG_CONFIG_PATH=$headers make -C "$src"; then
+        install_so "$src/hyprglass.so" "$dest"
+    else
+        warn "The HyprGlass fork has no pin for this Hyprland ($hl_commit); using upstream HyprGlass (no rim refraction)."
+        warn "To bring the fork back: rebase branch $HYPRGLASS_BRANCH onto upstream, add the pin to hyprpm.toml, re-run this."
+        rm -f "$dest/hyprglass.so"
 
-    hyprpm reload -n
-    hyprctl plugin load "$dest/hyprglass.so" || true
+        log "Building upstream HyprGlass"
+        src=$HOME/.local/src/hyprglass-upstream
+        [ -d "$src/.git" ] || git clone -q "$HYPRGLASS_UPSTREAM" "$src"
+        git -C "$src" fetch -q origin
+        # pins land on main after the release they point to, so read them from there
+        local pin
+        pin=$(git -C "$src" show origin/main:hyprpm.toml | grep -oE "\"$hl_commit\", *\"[0-9a-f]+\"" | grep -oE '[0-9a-f]{40}' | tail -1)
+        [ -n "$pin" ] || die "Upstream HyprGlass has no pin for Hyprland $hl_commit yet; try again after it's released"
+        git -C "$src" checkout -q "$pin"
+        PKG_CONFIG_PATH=$headers make -C "$src" || die "Upstream HyprGlass build failed"
+        install_so "$src/hyprglass.so" "$HOME/.local/share/hyprglass"
+    fi
+
+    # plugins.lua loads every plugin (hl.plugin.load); a reload picks up the new builds
     hyprctl reload
+}
+
+install_so() {  # install_so <built .so> <dir>: never overwrite a loaded .so in place
+    mkdir -p "$2"
+    install -m 755 "$1" "$2/hyprglass.so.new"
+    mv "$2/hyprglass.so.new" "$2/hyprglass.so"
 }
 
 # --- main -------------------------------------------------------------------
@@ -230,7 +255,7 @@ EOF
 [ "$(id -u)" -ne 0 ] || die "Run as your user, not root (it uses sudo where needed)"
 grep -q '^ID=arch' /etc/os-release || die "This is for Arch Linux"
 [ "$USER" = azriel ] && [ "$(id -u)" = 1000 ] \
-    || warn "Some configs hardcode /home/azriel and /run/user/1000; check hyprland.conf, plugins.conf, hyprlock.conf, macbar/macdock settings.json"
+    || warn "Some configs hardcode /home/azriel; check hyprlock.conf, macbar/macdock settings.json"
 
 if [ $# -gt 0 ]; then
     selected=("$@")
@@ -267,7 +292,7 @@ if [[ " ${selected[*]} " != *" plugins "* ]]; then
     cat <<'EOF'
 Next:
   1. Reboot and log into Hyprland from SDDM
-  2. In a terminal: ./install.sh plugins   (hyprpm plugins + HyprGlass fork)
+  2. In a terminal: ./install.sh plugins   (hyprpm plugins + HyprGlass)
   3. gh auth login, then add wallpapers to ~/Pictures/Wallpapers
 EOF
 fi

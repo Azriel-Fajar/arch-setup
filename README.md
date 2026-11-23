@@ -35,7 +35,7 @@ Run any of them on their own: `./install.sh rice dev`. All are safe to re-run.
 | `rice`     | Links `hypr`, `macbar`, `macdock`, `matugen`, `rofi`, `kitty`, `wlogout`, `gtk-3.0`, `mako`, `environment.d`; clones the [MacShell fork](https://github.com/Azriel-Fajar/MacShell/tree/azriel); installs the Bibata hyprcursor and builds the [MacOS-Like](https://github.com/Scrimas/MacOS-Like) icon theme; makes a default wallpaper and generates colors |
 | `system`   | User groups, zram, SDDM `macos` theme, enables NetworkManager, bluetooth, power-profiles-daemon, avahi, timesyncd, fstrim, sddm |
 | `dev`      | Links `.bashrc`, `.bash_profile`, `.zshrc`, `.blerc`, starship, atuin, Thunar, `mimeapps.list`; npm globals into `~/.npm-global` (Claude Code etc.); sets git name/email |
-| `plugins`  | From inside Hyprland only: hyprpm plugins (hyprbars, hyprfocus, Hyprspace, dynamic-cursors) and builds the [HyprGlass fork](https://github.com/Azriel-Fajar/hyprglass/tree/macshell) |
+| `plugins`  | From inside Hyprland only: hyprpm plugins (hyprbars, hyprfocus, Hyprspace, dynamic-cursors) and builds the [HyprGlass fork](https://github.com/Azriel-Fajar/hyprglass/tree/macshell), or [upstream HyprGlass](https://github.com/hyprnux/hyprglass) when the fork has no pin for your Hyprland. `plugins.lua` loads them all |
 
 Existing configs are moved to `~/.config-backup-<date>/` before linking.
 
@@ -49,11 +49,15 @@ Existing configs are moved to `~/.config-backup-<date>/` before linking.
 
 ## Caveats
 
-- Some configs assume user `azriel` with uid 1000 (`/home/azriel`, `/run/user/1000`
-  in `hyprland.conf`, `plugins.conf`, `hyprlock.conf`, `macbar`/`macdock` `settings.json`).
-  The script warns if yours differ.
-- The HyprGlass fork targets Hyprland 0.56.2. On a newer Hyprland, rebase branch
-  `macshell` onto the matching pin in `hyprpm.toml` before `./install.sh plugins`.
+- Hyprland is configured in Lua (`config/hypr/hyprland.lua`, `look.lua`, `plugins.lua`):
+  0.57 dropped `hyprland.conf`, and 0.55/0.56 pick `hyprland.lua` over it. The old
+  `hyprland.conf`, `glass.conf` and `plugins.conf` are no longer loaded. Scripts and MacShell
+  drive Hyprland with Lua dispatchers (`hyprctl dispatch 'hl.dsp.…'`).
+- Some configs assume user `azriel` with uid 1000 (`/home/azriel` in `hyprlock.conf`,
+  `macbar`/`macdock` `settings.json`). The script warns if yours differ.
+- The HyprGlass fork targets Hyprland 0.56.2. On a newer Hyprland, `./install.sh plugins`
+  builds upstream HyprGlass instead (same glass, but no rim refraction). To get the fork
+  back, rebase branch `macshell` onto upstream and add the pin to its `hyprpm.toml`.
 - `hyprlock.conf` uses a video background at `~/Videos/wallpaper_1080p.mp4`.
 
 ## Updating the repo from this machine
