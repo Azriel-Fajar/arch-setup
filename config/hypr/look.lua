@@ -4,7 +4,7 @@ local C = COLORS
 hl.config({
     general = {
         gaps_in     = 6,
-        gaps_out    = 12,
+        gaps_out    = 3,
         border_size = 2,
         col = {
             active_border   = { colors = { C.primary_a, C.tertiary_a }, angle = 45 },

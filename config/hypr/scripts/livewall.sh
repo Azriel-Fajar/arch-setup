@@ -76,11 +76,22 @@ login_bg_static() {
     [ -f "$img" ] && cp -- "$img" "$LOGIN_BG" 2>/dev/null
     return 0
 }
+# Borders, bar, notifications etc. follow the wallpaper: regenerate matugen colors from
+# an image (wallpaper.sh does this for stills) and reload the themed apps.
+retheme() {
+    [ -s "$1" ] || return 0
+    timeout 30 matugen image "$1" -m dark </dev/null >/dev/null || return 0
+    hyprctl reload >/dev/null
+    pkill -SIGUSR2 -x waybar || true
+    dunstctl reload || true
+    pkill -SIGUSR1 -x kitty || true
+}
 set_live() {
     [ -f "$1" ] || { echo "livewall: no such video: $1" >&2; exit 1; }
     printf '%s\n' "$(realpath -- "$1")" > "$STATE"
     echo live > "$MODE"
     login_bg_video "$1"
+    retheme "$CACHE/login-bg.jpg"
     play "$(cat "$STATE")"
 }
 
@@ -104,7 +115,8 @@ case "${1:-}" in
         [ -n "$v" ] && play "$v" ;;
     --static) set_static ;;
     --toggle)
-        if [ "$(cat "$MODE" 2>/dev/null)" = live ]; then set_static
+        if [ "$(cat "$MODE" 2>/dev/null)" = live ]; then
+            set_static; retheme "$(cat "$CACHE/current-wallpaper" 2>/dev/null)"
         else set_live "${current:-$(list_vids | head -n1)}"; fi ;;
     "" | -h | --help)
         echo "Usage: $(basename "$0") <video> | --random | --pick | --restore | --static | --toggle" >&2

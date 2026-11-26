@@ -413,7 +413,7 @@ focus() {
         "{ leaf = \"workspaces\", enabled = \(.enabled), speed = \(.speed), bezier = \"\(.bezier)\", style = \"\(.style)\" }"')
     [ -n "$anim" ] && cmd="hl.animation({ leaf = 'workspaces', enabled = false }); "
     [ "${ws:-0}" -gt 0 ] && cmd+="hl.dispatch(hl.dsp.focus({ workspace = '$ws' })); "
-    [ -n "$a" ] && cmd+="hl.dispatch(hl.dsp.focus({ window = 'address:$a' }))"
+    [ -n "$a" ] && cmd+="hl.dispatch(hl.dsp.focus({ window = 'address:$a' })); hl.dispatch(hl.dsp.window.alter_zorder({ mode = 'top' }))"
     lua "$cmd"
     [ -n "$anim" ] && { sleep 0.3; lua "hl.animation($anim)"; }
 }

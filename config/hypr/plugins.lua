@@ -144,17 +144,17 @@ if hl.plugin.hyprglass then
     -- Added on top: the thin rim highlight (bevel) real Liquid Glass has.
     hg.preset("macshell", {
         inherits = "pomme",
-        blur_strength = 0.375, blur_iterations = 1, chromatic_aberration = 0, contrast = 1.0, saturation = 1.5,
+        blur_strength = 0.1, blur_iterations = 1, chromatic_aberration = 0, contrast = 1.0, saturation = 1.5,
         bevel_strength = 0.85, bevel_size = 1.5, bevel_tint = 0.25, specular_strength = 0.5, fresnel_strength = 0.15,
         -- dark: + adaptive tint (darken over bright content, lift over dark) so the glass never goes flat
         dark  = { tint_color = 0, brightness = 0.85, contrast = 1.0, saturation = 1.5, adaptive_dim = 0.2, adaptive_boost = 0.1 },
         light = { tint_color = 0, brightness = 1.2,  contrast = 1.0, saturation = 1.5 },
     })
     -- the menu bar sits under small text and icons: more frost there keeps them readable
-    hg.preset("macshellbar", { inherits = "macshell", blur_strength = 0.6 })
+    hg.preset("macshellbar", { inherits = "macshell", blur_strength = 0.15 })
     -- menus, Control Center, Spotlight: Apple's frostier "regular" glass so their text stays readable
     -- edge_thickness_px: a fixed rim, so the small workspace pill gets the same edge as a big menu
-    hg.preset("macshellpanel", { inherits = "macshell", blur_strength = 1.2, blur_iterations = 2, edge_thickness_px = 5 })
+    hg.preset("macshellpanel", { inherits = "macshell", blur_strength = 0.3, blur_iterations = 1, edge_thickness_px = 10 })
 
     -- MacShell layers: menu bar (macbarbg), Dock, popovers/menus/Control Center (macbar), Spotlight (macspot),
     -- Alt+Tab switcher (macswitch), wallpaper picker (macwall)
@@ -195,9 +195,10 @@ if hl.plugin.hyprglass then
         hg.layer("rofi")
         hg.layer("macbarbg",  { preset = "macshellbar",   mask_mode = "region" })
         hg.layer("macdock",   { preset = "macshell",      mask_mode = "region" })
-        -- macbar (MacShell) requests glass exactly for the active workspace pill and each open popover / Control
-        -- Center tile. Contour or alpha would also give the bar's text glass (white specks around the letters).
-        hg.layer("macbar",    { preset = "macshellpanel", mask_mode = "region" })
+        -- macbar (MacShell): upstream's region mode glasses the region's whole bounding box (workspace pill to
+        -- Control Center = one big blurred rectangle), and contour bloats round shapes (circles turn into eggs).
+        -- alpha follows exactly what MacShell draws; the tiles' fill is ~0.10 alpha, hence the low threshold.
+        hg.layer("macbar",    { preset = "macshellpanel", mask_mode = "alpha", mask_threshold = 0.03, mask_feather = 0.05 })
         hg.layer("macspot",   { preset = "macshellpanel", mask_mode = "contour", mask_threshold = 0.08 })
         hg.layer("macswitch", { preset = "macshellpanel", mask_mode = "contour", mask_threshold = 0.08 })
         hg.layer("macwall",   { preset = "macshellpanel", mask_mode = "contour", mask_threshold = 0.08 })

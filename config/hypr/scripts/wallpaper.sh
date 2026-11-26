@@ -74,6 +74,8 @@ if ! awww img "$img" "${trans[@]}" --transition-fps 60 --transition-bezier .65,0
     exit 1
 fi
 printf '%s\n' "$img" > "$STATE"
+# Picking a static wallpaper replaces the live one (login --restore keeps the saved mode)
+[ "${1:-}" = --restore ] || "$(dirname "$0")/livewall.sh" --static
 # Login screen (SDDM macos theme) shows the same wallpaper; file is user-owned
 cp -- "$img" /usr/share/sddm/themes/macos/background.jpg 2>/dev/null || true
 

@@ -25,5 +25,5 @@
   "showIndicators": true,
   "bounceOnLaunch": true,
   "showThumbs": true,
-  "windowCapture": false
+  "windowCapture": true
 }

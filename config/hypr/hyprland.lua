@@ -91,6 +91,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("wl-paste --type image --watch cliphist store")
     hl.exec_cmd("awww-daemon")
     hl.exec_cmd(SCRIPTS .. "/wallpaper.sh --restore")
+    hl.exec_cmd(SCRIPTS .. "/livewall.sh --restore")
     hl.exec_cmd(SCRIPTS .. "/wallpaper-hotplug.sh")
     hl.exec_cmd(WINCTL .. " daemon")
 end)
@@ -108,10 +109,13 @@ hl.config({
     },
     cursor = {
         no_hardware_cursors = true,
+        no_warps            = true,
     },
     input = {
         kb_layout    = "us",
         follow_mouse = 1,
+        -- keyboard focus changes (Alt+Tab) stick until the cursor crosses into another window
+        mouse_refocus = false,
         touchpad = {
             natural_scroll = true,
             scroll_factor  = 0.3,
@@ -156,6 +160,9 @@ hl.bind("ALT + Tab",            qs("switcher next"))
 hl.bind("ALT + SHIFT + Tab",    qs("switcher prev"))
 hl.bind(mod .. " + W",          exec(SCRIPTS .. "/wallpaper.sh --random"))
 hl.bind(mod .. " + SHIFT + W",  qs("wallpapers toggle"))
+hl.bind(mod .. " + ALT + W",    exec(SCRIPTS .. "/livewall.sh --random"))
+hl.bind(mod .. " + ALT + SHIFT + W", exec(SCRIPTS .. "/livewall.sh --pick"))
+hl.bind(mod .. " + CTRL + W",   exec(SCRIPTS .. "/livewall.sh --toggle"))
 hl.bind(mod .. " + V",          qs("spotlight clipboard"))
 hl.bind(mod .. " + SHIFT + V",  exec("cliphist list | rofi -dmenu | cliphist delete"))
 
@@ -197,7 +204,7 @@ hl.bind(mod .. " + CTRL + P",  exec(SCRIPTS .. "/display-toggle.sh reset"))
 hl.bind(mod .. " + ALT + P",   exec("nwg-displays"))
 
 -- Volume / brightness keys
-hl.bind("XF86AudioRaiseVolume",  exec("wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
+hl.bind("XF86AudioRaiseVolume",  exec("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
 hl.bind("XF86AudioLowerVolume",  exec("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),        { locked = true, repeating = true })
 hl.bind("XF86AudioMute",         exec("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),       { locked = true })
 hl.bind("XF86AudioMicMute",      exec("wpctl set-mute @DEFAULT_SOURCE@ toggle"),           { locked = true })

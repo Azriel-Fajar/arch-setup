@@ -1,0 +1,9 @@
+// Let the local active user run ONLY "lampp start" / "lampp stop" via pkexec, no password.
+polkit.addRule(function(action, subject) {
+    if (action.id != "org.freedesktop.policykit.exec") return;
+    if (subject.user != "azriel" || !subject.local || !subject.active) return;
+    var cmd = action.lookup("command_line");
+    var ok = ["/opt/lampp/lampp start", "/opt/lampp/lampp stop",
+              "/opt/lampp/xampp start", "/opt/lampp/xampp stop"];
+    if (ok.indexOf(cmd) >= 0) return polkit.Result.YES;
+});
