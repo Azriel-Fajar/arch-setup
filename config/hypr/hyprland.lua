@@ -156,8 +156,24 @@ hl.bind(mod .. " + Tab",    exec(WINCTL .. " desk toggle"))
 -- MacShell: Spotlight on a lone Super tap, emoji, Alt+Tab switcher, wallpapers, clipboard
 hl.bind(mod .. " + SUPER_L",    qs("spotlight toggle"), { release = true })
 hl.bind(mod .. " + period",     qs("spotlight emoji"))
-hl.bind("ALT + Tab",            qs("switcher next"))
-hl.bind("ALT + SHIFT + Tab",    qs("switcher prev"))
+hl.bind("ALT + Tab",            qs("switcher next $(date +%s%3N)"))
+hl.bind("ALT + SHIFT + Tab",    qs("switcher prev $(date +%s%3N)"))
+-- Alt release -> commit. A release bind never fires once Alt was used in the Alt+Tab combo, so watch raw key
+-- events instead: Tab while Alt is held arms it, the next Alt release (left or right) sends `switcher commit`.
+-- Hyprland sends it itself because a fast Alt+Tab releases Alt before the switcher layer has keyboard focus.
+local altHeld, switcherArmed = 0, false
+hl.on("input.keyboard.key", function(code, _, state)
+    if code == 64 or code == 108 then                      -- Alt_L / Alt_R (xkb keycodes)
+        altHeld = altHeld + (state == 1 and 1 or -1)
+        if altHeld < 0 then altHeld = 0 end
+        if state == 0 and switcherArmed then
+            switcherArmed = false
+            hl.exec_cmd("qs -c MacShell ipc call switcher commit $(date +%s%3N)")
+        end
+    elseif code == 23 and state == 1 and altHeld > 0 then  -- Tab
+        switcherArmed = true
+    end
+end)
 hl.bind(mod .. " + W",          exec(SCRIPTS .. "/wallpaper.sh --random"))
 hl.bind(mod .. " + SHIFT + W",  qs("wallpapers toggle"))
 hl.bind(mod .. " + ALT + W",    exec(SCRIPTS .. "/livewall.sh --random"))
