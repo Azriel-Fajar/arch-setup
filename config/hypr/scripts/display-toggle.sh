@@ -31,7 +31,7 @@ extend)
     # Place external to the right of the internal panel.
     WIDTH=$(hyprctl -j monitors all | jq -r --arg int "$INTERNAL" \
         '.[] | select(.name == $int) | .width')
-    apply "output = '$EXT', mode = '3840x2160@30', position = '${WIDTH}x0', scale = 2"
+    apply "output = '$EXT', mode = '1920x1080@60', position = '${WIDTH}x0', scale = 1"
     notify "Extending to $EXT (right of $INTERNAL)"
     ;;
 reset)

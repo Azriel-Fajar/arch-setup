@@ -408,8 +408,9 @@ daemon() {
 # Switch to window $1 on workspace $2 without the workspace slide (MacShell's switcher calls this)
 focus() {
     local a=$1 ws=$2 anim cmd=""
-    # the configured workspaces animation, as an hl.animation() table to put back afterwards
-    anim=$(hyprctl animations -j | jq -r '.[0][] | select(.name == "workspaces" and .overridden) |
+    # the configured workspaces animation, as an hl.animation() table to put back afterwards; ".enabled" skips the
+    # capture while an overlapping call has it switched off, else the disabled state got saved as the "original"
+    anim=$(hyprctl animations -j | jq -r '.[0][] | select(.name == "workspaces" and .overridden and .enabled) |
         "{ leaf = \"workspaces\", enabled = \(.enabled), speed = \(.speed), bezier = \"\(.bezier)\", style = \"\(.style)\" }"')
     [ -n "$anim" ] && cmd="hl.animation({ leaf = 'workspaces', enabled = false }); "
     [ "${ws:-0}" -gt 0 ] && cmd+="hl.dispatch(hl.dsp.focus({ workspace = '$ws' })); "

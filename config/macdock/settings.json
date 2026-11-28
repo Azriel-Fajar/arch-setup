@@ -5,7 +5,7 @@
   "magnificationEnabled": true,
   "spacing": 5,
   "margin": 7,
-  "cornerRadius": 20,
+  "cornerRadius": 21,
   "darkMode": true,
   "glassOpacity": 0,
   "dockStyle": "liquid",

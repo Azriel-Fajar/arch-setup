@@ -39,7 +39,7 @@ WINCTL = SCRIPTS .. "/winctl.sh"
 -- Fallback for any output; nwg-displays (Super+Alt+P) writes monitors.lua
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
 optional("monitors")
-hl.monitor({ output = "HDMI-A-1", mode = "3840x2160@30", position = "auto-right", scale = 2 })
+hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@60", position = "auto-right", scale = 1 })
 hl.monitor({ output = "desc:Xiaomi Corporation Mi Monitor", mode = "1920x1080@200", position = "auto", scale = 1 })
 -- Runtime mirror/extend from scripts/display-toggle.sh (tmpfs: cleared on logout). Usually absent.
 local override = RUNTIME .. "/hypr-display-override.lua"
@@ -130,8 +130,8 @@ hl.config({
 -- 3-finger swipe left/right switches workspace
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 -- winctl tracks whether the overview is open: 4-finger down closes it, or shows the desktop when it's closed
-hl.gesture({ fingers = 4, direction = "up",   action = function() hl.exec_cmd(WINCTL .. " desk up") end })
-hl.gesture({ fingers = 4, direction = "down", action = function() hl.exec_cmd(WINCTL .. " desk down") end })
+hl.gesture({ fingers = 3, direction = "up",   action = function() hl.exec_cmd(WINCTL .. " desk up") end })
+hl.gesture({ fingers = 3, direction = "down", action = function() hl.exec_cmd(WINCTL .. " desk down") end })
 
 
 ------------------

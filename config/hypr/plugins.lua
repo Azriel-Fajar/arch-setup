@@ -129,7 +129,7 @@ if hl.plugin.hyprglass then
         -- off by default; scripts/winctl.sh tags floating, non-maximized windows hyprglass_enabled
         enabled        = 0,
         default_theme  = "dark",
-        default_preset = "pomme",
+        default_preset = "macshell",
         tint_color     = tonumber(C.glass_tint) or 0,
         layers = {
             enabled = 1,
@@ -146,15 +146,21 @@ if hl.plugin.hyprglass then
         inherits = "pomme",
         blur_strength = 0.1, blur_iterations = 1, chromatic_aberration = 0, contrast = 1.0, saturation = 1.5,
         bevel_strength = 0.85, bevel_size = 1.5, bevel_tint = 0.25, specular_strength = 0.5, fresnel_strength = 0.15,
+        -- upstream lens edge (replaces the fork's displacement rim): crisp bend at the rim, flat center
+        edge_height = 40, edge_thickness_px = 16, fresnel_reflection = 0.3,
         -- dark: + adaptive tint (darken over bright content, lift over dark) so the glass never goes flat
         dark  = { tint_color = 0, brightness = 0.85, contrast = 1.0, saturation = 1.5, adaptive_dim = 0.2, adaptive_boost = 0.1 },
         light = { tint_color = 0, brightness = 1.2,  contrast = 1.0, saturation = 1.5 },
     })
     -- the menu bar sits under small text and icons: more frost there keeps them readable
-    hg.preset("macshellbar", { inherits = "macshell", blur_strength = 0.15 })
+    hg.preset("macshellbar", { inherits = "macshell", blur_strength = 0.1 })
     -- menus, Control Center, Spotlight: Apple's frostier "regular" glass so their text stays readable
     -- edge_thickness_px: a fixed rim, so the small workspace pill gets the same edge as a big menu
-    hg.preset("macshellpanel", { inherits = "macshell", blur_strength = 0.3, blur_iterations = 1, edge_thickness_px = 10 })
+    -- wide lens rim + bright bevel = Apple's thick-glass edge (the fork's displacement rim is gone on upstream)
+    -- squircle bezel + rim light live in the shader (~/.local/src/HyprGlass, src/Shaders.hpp LENS EDGE)
+    hg.preset("macshellpanel", { inherits = "macshell", blur_strength = 0.2, blur_iterations = 1, edge_thickness_px = 12,
+        edge_height = 24, refraction_strength = 1.0, chromatic_aberration = 0.6, fresnel_reflection = 0.2,
+        bevel_strength = 0.6, specular_strength = 0.6, specular_angle = -45 })
 
     -- MacShell layers: menu bar (macbarbg), Dock, popovers/menus/Control Center (macbar), Spotlight (macspot),
     -- Alt+Tab switcher (macswitch), wallpaper picker (macwall)
@@ -202,5 +208,6 @@ if hl.plugin.hyprglass then
         hg.layer("macspot",   { preset = "macshellpanel", mask_mode = "contour", mask_threshold = 0.08 })
         hg.layer("macswitch", { preset = "macshellpanel", mask_mode = "contour", mask_threshold = 0.08 })
         hg.layer("macwall",   { preset = "macshellpanel", mask_mode = "contour", mask_threshold = 0.08 })
+        hg.layer("macwidgets", { preset = "macshellpanel", mask_mode = "contour", mask_threshold = 0.08 })
     end
 end
